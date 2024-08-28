@@ -1,5 +1,7 @@
 import random
 import json
+import threading
+from sent_notification import SmailS
 from tkinter import *
 from datetime import date
 
@@ -157,6 +159,10 @@ class Block:
             a = 0
         return " (" + str(a) + " % )"
 
+    def send_email(self):
+        send_mail = SmailS()
+        send_mail.send_email()
+
     def update_label(self):
         self.all_attempt.config(text="Всего примеров :  " + str(self.lst["all_attempt"]))
         self.all_today.config(text="Примеров за сегодня :  " + str(self.lst["all_today"]))
@@ -164,10 +170,9 @@ class Block:
         self.error_attempt.config(text="Примеров решено с ошибкой :  " + str(self.lst["error_attempt"]))
         if self.lst["success_attempt"] > 20:
             self.cngt.config(text = " МОЛОДЕЦ! Ты решил дневную норму. Можно взять у родителей вкусняшку!:)", fg="blue")
+            t1 = threading.Thread(target=self.send_email)
+            t1.start()
 
 root = Tk()
 
 first_block = Block(root)
-
-
-root.mainloop()
