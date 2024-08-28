@@ -176,3 +176,5 @@ class Block:
 root = Tk()
 
 first_block = Block(root)
+
+root.mainloop()
