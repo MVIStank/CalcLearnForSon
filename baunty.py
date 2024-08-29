@@ -9,8 +9,8 @@ from datetime import date
 class Block:
 
     def __init__(self, master):
-        #self.lst = {"time": "0", "all_attempt": 0, "all_today": 0, "success_attempt": 0, "error_attempt": 0}
-       # self.json_write()
+        #self.lst = {"time": "0", "all_attempt": 0, "all_today": 0, "success_attempt": 0, "error_attempt": 0, "check_send_email": 0}
+        # self.json_write()
         # загрузка результатов
         self.lst = self.json_load()
         self.prepare_json()
@@ -21,24 +21,27 @@ class Block:
 
         # чек. Был ли первый ответ
         self.check_first_answer = 1
+        # чек. Была ли отправка письма сегодня
+        self.check_sent_email = 0
 
         self.geometry = master.geometry("620x600")
         self.welcome = master.title("Тимофей, давай учиться считать!")
         self.lab = Label(master, text="Посчитай, сколько получится?")
         # Фон фото
-        self.image = PhotoImage (file="/home/vladimir/Downloads/t1.png")
+        self.image = PhotoImage(file="/home/vladimir/Downloads/t1.png")
         self.image_label = Label(master, image=self.image)
 
         self.ent = Entry(master, width=10)
-        self.ent.insert(0,str(self.first_number) + " " + self.sum_min + " " + str(self.second_number))
-        self.lab1 = Label(master,text="Твой ответ")
-        self.but = Button(master, text='Проверить',command=self.action_button)
+        self.ent.insert(0, str(self.first_number) + " " + self.sum_min + " " + str(self.second_number))
+        self.lab1 = Label(master, text="Твой ответ")
+        self.but = Button(master, text='Проверить', command=self.action_button)
         self.gen_new_but = Button(master, text='Cгенерировать новое значение', command=self.gen_action_button)
         self.answer = Text(width=30, height=1)
-        self.stats = Label(master,  text="Статистика:")
-        self.all_attempt = Label(master,text="Всего примеров :  " + str(self.lst["all_attempt"]))
+        self.stats = Label(master, text="Статистика:")
+        self.all_attempt = Label(master, text="Всего примеров :  " + str(self.lst["all_attempt"]))
         self.all_today = Label(master, text="Примеров за сегодня :  " + str(self.lst["all_today"]))
-        self.success_attempt = Label(master,text="Примеров решено успешно :  " + str(self.lst["success_attempt"]) + self.calculate_percent())
+        self.success_attempt = Label(master, text="Примеров решено успешно :  " + str(
+            self.lst["success_attempt"]) + self.calculate_percent())
         self.error_attempt = Label(master, text="Примеров решено с ошибкой :  " + str(self.lst["error_attempt"]))
         self.cngt = Label(master)
         self.lab.pack()
@@ -47,7 +50,7 @@ class Block:
         self.answer.pack()
         self.but.pack()
         self.gen_new_but.pack()
-        self.stats.place(x = 250, y=160)
+        self.stats.place(x=250, y=160)
         self.all_attempt.place(x=20, y=180)
         self.all_today.place(x=20, y=200)
         self.success_attempt.place(x=315, y=180)
@@ -56,11 +59,11 @@ class Block:
         self.image_label.pack(pady=10)
 
     def rand_a(self):
-        ls =[]
+        ls = []
         number_a = random.randint(1, 10)
         number_b = random.randint(1, 10)
         if number_a >= number_b:
-            ls =[number_a,number_b]
+            ls = [number_a, number_b]
             return ls
         else:
             ls = [number_b, number_a]
@@ -69,32 +72,30 @@ class Block:
     def rand_sum_min(self):
         number = random.randint(0, 1)
         if number == 0:
-            print(1)
             self.mode = 1
             return "+"
         else:
-            print(0)
             self.mode = 0
             return "-"
 
-#нажата кнопка "Проверить"
+    #нажата кнопка "Проверить"
     def action_button(self):
         str = self.answer.get("1.0", END)
         try:
             self.tim_answer = int(str)
             if self.check_answer():
-                self.lab1.config(text="Умничка! Верно!",bg= "green")
+                self.lab1.config(text="Умничка! Верно!", bg="green")
             else:
                 self.lab1.config(text="Неверно", bg="yellow")
-            if self.check_first_answer:
+            if self.check_first_answer:  # Проверяем: если первая попытка - то записываем результат
                 self.set_count_attempt()
                 self.json_write()
             self.check_first_answer = 0
             self.update_label()
+            #self.json_write()
 
         except ValueError:
             self.lab1.config(text=" Ответ должен быть ввиде числа!", bg="red")
-
 
     def check_answer(self):
         if self.mode:
@@ -110,21 +111,20 @@ class Block:
 
     def gen_action_button(self):
         self.sum_min = self.rand_sum_min()
-        self.first_number,self.second_number = self.rand_a()
+        self.first_number, self.second_number = self.rand_a()
         self.ent.delete(0, END)
         self.ent.insert(0, str(self.first_number) + " " + self.sum_min + " " + str(self.second_number))
-        self.lab1.config(text="Твой ответ",bg="white")
+        self.lab1.config(text="Твой ответ", bg="white")
         self.check_first_answer = 1
 
-#### Работа с JSON ######
+    #### Работа с JSON ######
     def json_load(self):
-      with open("/home/vladimir/Downloads/answer.json", "r") as file_stream:
-        return json.load(file_stream)
+        with open("/home/vladimir/Downloads/answer.json", "r") as file_stream:
+            return json.load(file_stream)
 
-
-    def json_write (self):
-      with open("/home/vladimir/Downloads/answer.json", "w") as file_stream:
-            json.dump(self.lst,file_stream)
+    def json_write(self):
+        with open("/home/vladimir/Downloads/answer.json", "w") as file_stream:
+            json.dump(self.lst, file_stream)
             file_stream.write('\n')
 
     def prepare_json(self):
@@ -135,11 +135,12 @@ class Block:
             self.lst["all_today"] = 0
             self.lst["success_attempt"] = 0
             self.lst["error_attempt"] = 0
+            self.lst["check_send_email"] = 0
             self.lst["time"] = current_date
+            self.lst["check_send_email"] = 0
             self.json_write()
 
-
-    def set_count_attempt (self):
+    def set_count_attempt(self):
         current_date = date.today()
         current_date = current_date.strftime("%B %d, %Y")
         if self.check_first_answer:
@@ -150,7 +151,6 @@ class Block:
                 self.lst["success_attempt"] += 1
             else:
                 self.lst["error_attempt"] += 1
-
 
     def calculate_percent(self):
         try:
@@ -166,12 +166,16 @@ class Block:
     def update_label(self):
         self.all_attempt.config(text="Всего примеров :  " + str(self.lst["all_attempt"]))
         self.all_today.config(text="Примеров за сегодня :  " + str(self.lst["all_today"]))
-        self.success_attempt.config(text="Примеров решено успешно :  " + str(self.lst["success_attempt"]) + self.calculate_percent())
+        self.success_attempt.config(
+            text="Примеров решено успешно :  " + str(self.lst["success_attempt"]) + self.calculate_percent())
         self.error_attempt.config(text="Примеров решено с ошибкой :  " + str(self.lst["error_attempt"]))
         if self.lst["success_attempt"] > 20:
-            self.cngt.config(text = " МОЛОДЕЦ! Ты решил дневную норму. Можно взять у родителей вкусняшку!:)", fg="blue")
-            t1 = threading.Thread(target=self.send_email)
-            t1.start()
+            self.cngt.config(text=" МОЛОДЕЦ! Ты решил дневную норму. Можно взять у родителей вкусняшку!:)", fg="blue")
+            if self.check_sent_email == 0:
+                t1 = threading.Thread(target=self.send_email)
+                t1.start()
+                self.check_sent_email = 1
+
 
 root = Tk()
 
