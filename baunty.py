@@ -11,6 +11,8 @@ class Block:
     def __init__(self, master):
         #self.lst = {"time": "0", "all_attempt": 0, "all_today": 0, "success_attempt": 0, "error_attempt": 0, "check_send_email": 0}
         # self.json_write()
+        # чек. Была ли отправка письма сегодня
+        self.check_sent_email = 0
         # загрузка результатов
         self.lst = self.json_load()
         self.prepare_json()
@@ -21,8 +23,6 @@ class Block:
 
         # чек. Был ли первый ответ
         self.check_first_answer = 1
-        # чек. Была ли отправка письма сегодня
-        self.check_sent_email = 0
 
         self.geometry = master.geometry("620x600")
         self.welcome = master.title("Тимофей, давай учиться считать!")
@@ -41,7 +41,7 @@ class Block:
         self.all_attempt = Label(master, text="Всего примеров :  " + str(self.lst["all_attempt"]))
         self.all_today = Label(master, text="Примеров за сегодня :  " + str(self.lst["all_today"]))
         self.success_attempt = Label(master, text="Примеров решено успешно :  " + str(
-            self.lst["success_attempt"]) + self.calculate_percent())
+        self.lst["success_attempt"]) + self.calculate_percent())
         self.error_attempt = Label(master, text="Примеров решено с ошибкой :  " + str(self.lst["error_attempt"]))
         self.cngt = Label(master)
         self.lab.pack()
@@ -131,7 +131,6 @@ class Block:
         current_date = date.today()
         current_date = current_date.strftime("%B %d, %Y")
         if self.lst["time"] != current_date:
-            print(current_date)
             self.lst["all_today"] = 0
             self.lst["success_attempt"] = 0
             self.lst["error_attempt"] = 0
@@ -139,6 +138,7 @@ class Block:
             self.lst["time"] = current_date
             self.lst["check_send_email"] = 0
             self.json_write()
+        self.check_sent_email = self.lst["check_send_email"]
 
     def set_count_attempt(self):
         current_date = date.today()
@@ -159,8 +159,8 @@ class Block:
             a = 0
         return " (" + str(a) + " % )"
 
-    def send_email(self):
-        send_mail = SmailS()
+    def send_email(self, **kwargs):
+        send_mail = SmailS(**kwargs)
         send_mail.send_email()
 
     def update_label(self):
@@ -169,12 +169,16 @@ class Block:
         self.success_attempt.config(
             text="Примеров решено успешно :  " + str(self.lst["success_attempt"]) + self.calculate_percent())
         self.error_attempt.config(text="Примеров решено с ошибкой :  " + str(self.lst["error_attempt"]))
-        if self.lst["success_attempt"] > 20:
+        if self.lst["success_attempt"] > 1:
             self.cngt.config(text=" МОЛОДЕЦ! Ты решил дневную норму. Можно взять у родителей вкусняшку!:)", fg="blue")
             if self.check_sent_email == 0:
-                t1 = threading.Thread(target=self.send_email)
+                print (self.check_sent_email)
+                t1 = threading.Thread(target=self.send_email, kwargs=self.lst)
                 t1.start()
                 self.check_sent_email = 1
+                self.lst["check_send_email"] = 1
+
+                self.json_write()
 
 
 root = Tk()
